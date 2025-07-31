@@ -8,6 +8,7 @@ using StructTypes
 using Dates  # Add Dates module for timestamp functionality
 # These are sibling modules within the 'api' directory
 using ..AgentHandlers
+using ..StorageHandlers
 # using ..MetricsHandlers
 # using ..LlmHandlers # Use LlmHandlers as per screenshot and updated file
 # using ..SwarmHandlers # Added SwarmHandlers
@@ -101,6 +102,26 @@ function register_routes()
     @get agent_router("/{agent_id}/memory/{key}") AgentHandlers.get_agent_memory_handler # Get a value from agent's memory
     @post agent_router("/{agent_id}/memory/{key}") AgentHandlers.set_agent_memory_handler # Set a value in agent's memory
     @delete agent_router("/{agent_id}/memory") AgentHandlers.clear_agent_memory_handler   # Clear all memory for an agent
+
+    # ----------------------------------------------------------------------
+    # Storage Management Routes
+    # These routes handle file upload/download and storage provider management.
+    # ----------------------------------------------------------------------
+
+    # Create storage router group
+    storage_router = router(BASE_PATH * "/storage", tags=["Storage Management"])
+
+    # --- Storage Provider Management ---
+    @get storage_router("/providers") StorageHandlers.list_storage_providers_handler    # List available storage providers
+    @post storage_router("/providers/switch") StorageHandlers.switch_storage_provider_handler # Switch storage provider
+    @get storage_router("/stats") StorageHandlers.get_storage_stats_handler            # Get storage statistics
+
+    # --- File Operations ---
+    @post storage_router("/files") StorageHandlers.upload_file_handler                 # Upload a file
+    @get storage_router("/files") StorageHandlers.list_files_handler                   # List files
+    @get storage_router("/files/{key}") StorageHandlers.download_file_handler          # Download a file
+    @delete storage_router("/files/{key}") StorageHandlers.delete_file_handler         # Delete a file
+    @get storage_router("/files/{key}/exists") StorageHandlers.file_exists_handler     # Check if file exists
 
     # # ----------------------------------------------------------------------
     # # Metrics Routes

@@ -12,6 +12,9 @@ include("telegram/tool_detect_swearing.jl")
 include("telegram/tool_send_message.jl")
 include("tool_scrape_article_text.jl")
 include("tool_summarize_for_post.jl")
+include("tool_file_upload.jl")
+include("tool_file_download.jl")
+include("tool_storage_manage.jl")
 
 using ..CommonTypes: ToolSpecification
 
@@ -37,5 +40,8 @@ register_tool(TOOL_DETECT_SWEAR_SPECIFICATION)
 register_tool(TOOL_SEND_MESSAGE_SPECIFICATION)
 register_tool(TOOL_SCRAPE_ARTICLE_TEXT_SPECIFICATION)
 register_tool(TOOL_SUMMARIZE_FOR_POST_SPECIFICATION)
+register_tool(TOOL_FILE_UPLOAD_SPECIFICATION)
+register_tool(TOOL_FILE_DOWNLOAD_SPECIFICATION)
+register_tool(TOOL_STORAGE_MANAGE_SPECIFICATION)
 
 end

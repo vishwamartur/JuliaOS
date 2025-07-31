@@ -9,6 +9,7 @@ include("Utils.jl")
 
 # Include all handler modules
 include("AgentHandlers.jl")
+include("StorageHandlers.jl")
 include("BlockchainHandlers.jl")
 include("DexHandlers.jl")
 include("LlmHandlers.jl")

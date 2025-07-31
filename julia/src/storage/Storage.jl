@@ -18,10 +18,15 @@ include("local_storage.jl")
 using .LocalStorage
 export LocalStorageProvider # Re-export concrete provider type
 
-# Placeholder for Arweave and Document storage (if they are to be included directly)
-# include("arweave_storage.jl")
-# using .ArweaveStorage
-# export ArweaveStorageProvider
+# Include IPFS storage provider
+include("ipfs_storage.jl")
+using .IPFSStorage
+export IPFSStorageProvider
+
+# Include Arweave storage provider
+include("arweave_storage.jl")
+using .ArweaveStorage
+export ArweaveStorageProvider
 
 # include("document_storage.jl")
 # using .DocumentStorage
@@ -59,9 +64,31 @@ function initialize_storage_system(; provider_type::Symbol=:local, config::Dict=
             db_path_val = get(config, "db_path", joinpath(homedir(), ".juliaos", "default_juliaos_storage.sqlite"))
             provider_instance = LocalStorageProvider(db_path_val)
             initialize_provider(provider_instance; config=config) # Pass full config for any other options
-        # elseif provider_type == :arweave
-        #     provider_instance = ArweaveStorageProvider() # Constructor might take specific args from config
-        #     initialize_provider(provider_instance; config=config)
+        elseif provider_type == :ipfs
+            # IPFS provider configuration
+            api_url = get(config, "api_url", "http://127.0.0.1:5001")
+            timeout = get(config, "timeout", 30)
+            use_cli = get(config, "use_cli", false)
+            ipfs_binary_path = get(config, "ipfs_binary_path", "ipfs")
+            pin_files = get(config, "pin_files", true)
+            gateway_url = get(config, "gateway_url", "http://127.0.0.1:8080")
+
+            provider_instance = IPFSStorageProvider(api_url; timeout=timeout, use_cli=use_cli,
+                                                   ipfs_binary_path=ipfs_binary_path, pin_files=pin_files,
+                                                   gateway_url=gateway_url)
+            initialize_provider(provider_instance; config=config)
+        elseif provider_type == :arweave
+            # Arweave provider configuration
+            gateway_url = get(config, "gateway_url", "https://arweave.net")
+            wallet_file = get(config, "wallet_file", "")
+            timeout = get(config, "timeout", 60)
+            use_bundlr = get(config, "use_bundlr", false)
+            bundlr_url = get(config, "bundlr_url", "https://node1.bundlr.network")
+            currency = get(config, "currency", "arweave")
+
+            provider_instance = ArweaveStorageProvider(gateway_url; wallet_file=wallet_file, timeout=timeout,
+                                                      use_bundlr=use_bundlr, bundlr_url=bundlr_url, currency=currency)
+            initialize_provider(provider_instance; config=config)
         # elseif provider_type == :document
         #     # DocumentStorageProvider might wrap another provider, e.g., local or Arweave
         #     base_provider_type = get(config, "base_provider_type", :local)
@@ -71,7 +98,7 @@ function initialize_storage_system(; provider_type::Symbol=:local, config::Dict=
         #     provider_instance = DocumentStorageProvider(base_provider)
         #     initialize_provider(provider_instance; config=config)
         else
-            error("Unsupported storage provider type: $provider_type")
+            error("Unsupported storage provider type: $provider_type. Supported types: :local, :ipfs, :arweave")
         end
 
         if !isnothing(provider_instance)
@@ -130,6 +157,95 @@ end
 function exists_default(key::String)::Bool
     provider = get_default_storage_provider()
     return exists(provider, key)
+end
+
+"""
+    get_available_providers()::Vector{Symbol}
+
+Get list of available storage provider types.
+"""
+function get_available_providers()::Vector{Symbol}
+    return [:local, :ipfs, :arweave]
+end
+
+"""
+    get_current_provider_type()::Union{Symbol, Nothing}
+
+Get the type of the currently active storage provider.
+"""
+function get_current_provider_type()::Union{Symbol, Nothing}
+    if !STORAGE_SYSTEM_INITIALIZED[] || isnothing(DEFAULT_STORAGE_PROVIDER[])
+        return nothing
+    end
+
+    provider = DEFAULT_STORAGE_PROVIDER[]
+    if isa(provider, LocalStorageProvider)
+        return :local
+    elseif isa(provider, IPFSStorageProvider)
+        return :ipfs
+    elseif isa(provider, ArweaveStorageProvider)
+        return :arweave
+    else
+        return :unknown
+    end
+end
+
+"""
+    switch_provider(provider_type::Symbol; config::Dict=Dict())::Bool
+
+Switch to a different storage provider at runtime.
+"""
+function switch_provider(provider_type::Symbol; config::Dict=Dict())::Bool
+    try
+        old_provider_type = get_current_provider_type()
+        new_provider = initialize_storage_system(provider_type=provider_type, config=config)
+
+        if !isnothing(new_provider)
+            @info "Successfully switched storage provider from $old_provider_type to $provider_type"
+            return true
+        else
+            @error "Failed to switch to storage provider: $provider_type"
+            return false
+        end
+    catch e
+        @error "Error switching storage provider to $provider_type" exception=(e, catch_backtrace())
+        return false
+    end
+end
+
+"""
+    get_provider_info()::Dict{String, Any}
+
+Get information about the current storage provider.
+"""
+function get_provider_info()::Dict{String, Any}
+    if !STORAGE_SYSTEM_INITIALIZED[] || isnothing(DEFAULT_STORAGE_PROVIDER[])
+        return Dict("status" => "not_initialized")
+    end
+
+    provider = DEFAULT_STORAGE_PROVIDER[]
+    provider_type = get_current_provider_type()
+
+    info = Dict{String, Any}(
+        "type" => string(provider_type),
+        "initialized" => true,
+        "provider_class" => string(typeof(provider))
+    )
+
+    # Add provider-specific information
+    if isa(provider, LocalStorageProvider)
+        info["db_path"] = provider.db_path
+    elseif isa(provider, IPFSStorageProvider)
+        info["api_url"] = provider.api_url
+        info["use_cli"] = provider.use_cli
+        info["pin_files"] = provider.pin_files
+    elseif isa(provider, ArweaveStorageProvider)
+        info["gateway_url"] = provider.gateway_url
+        info["use_bundlr"] = provider.use_bundlr
+        info["has_wallet"] = !isnothing(provider.wallet_key)
+    end
+
+    return info
 end
 
 # TODO: Add search_default if DocumentStorageProvider is integrated and set as default.

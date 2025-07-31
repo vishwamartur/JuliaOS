@@ -30,16 +30,28 @@ enable_authentication = false
 api_keys = ["default-secret-key-please-change"]
 
 [storage]
-type = "local"            # local, arweave, web3
+type = "local"            # local, ipfs, arweave
 path = "data/storage"
 max_file_size = 10485760  # 10MB in bytes
+
+# Local storage configuration
 local_db_path = "~/.juliaos/juliaos.sqlite"
+
+# IPFS storage configuration
+ipfs_api_url = "http://127.0.0.1:5001"
+ipfs_gateway_url = "http://127.0.0.1:8080"
+ipfs_timeout = 30
+ipfs_use_cli = false
+ipfs_binary_path = "ipfs"
+ipfs_pin_files = true
+
+# Arweave storage configuration
+arweave_gateway_url = "https://arweave.net"
 arweave_wallet_file = ""
-arweave_gateway = "arweave.net"
-arweave_port = 443
-arweave_protocol = "https"
-arweave_timeout = 20000
-arweave_logging = false
+arweave_timeout = 60
+arweave_use_bundlr = false
+arweave_bundlr_url = "https://node1.bundlr.network"
+arweave_currency = "arweave"
 
 [storage.arweave]
 host = "arweave.net"

@@ -14,6 +14,8 @@ Translations:
 
 JuliaOS is a comprehensive framework for building decentralized applications (DApps) with a focus on agent-based architectures, swarm intelligence, and cross-chain operations. It provides both a CLI interface for quick deployment and a framework API for custom implementations. By leveraging AI-powered agents and swarm optimization, JuliaOS enables sophisticated strategies across multiple blockchains.
 
+**🆕 New Storage Enhancements**: JuliaOS now supports decentralized storage backends including IPFS and Arweave, enabling agents to store and share data across distributed networks. Agents can seamlessly upload LLM outputs, datasets, and swarm state snapshots to any configured storage provider.
+
 ## Documentation
 
 - 📖 [Overview](https://juliaos.gitbook.io/juliaos-documentation-hub): Project overview and vision
