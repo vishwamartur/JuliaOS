@@ -17,9 +17,13 @@ include("algorithms/de.jl")
 include("algorithms/ga.jl")
 include("algorithms/pso.jl")
 
+# Include swarm enhancements
+include("SwarmEnhancements.jl")
+
 using .PSOAlgorithmImpl: PSOAlgorithm
 using .DEAlgorithmImpl: DEAlgorithm
 using .GAAlgorithmImpl: GAAlgorithm
+using .SwarmEnhancements
 
 # Assuming Agents.jl and its submodules are accessible from the parent scope 
 # (e.g., if JuliaOSFramework.jl includes both this and Agents)
@@ -50,7 +54,13 @@ export Swarm, SwarmConfig, SwarmStatus, createSwarm, getSwarm, listSwarms, start
        getSwarmStatus, addAgentToSwarm, removeAgentFromSwarm, getSharedState, updateSharedState!,
        electLeader, allocateTask, claimTask, completeTask, getSwarmMetrics,
        AbstractSwarmAlgorithm, OptimizationProblem, SwarmSolution, OptimizationResult,
-       register_objective_function! # Exporting this for TradingStrategy
+       register_objective_function!, # Exporting this for TradingStrategy
+       # Export swarm enhancements
+       EnhancedSwarmSystem, EnhancedSwarmConfig, create_enhanced_swarm_system,
+       run_enhanced_swarm_optimization!, get_swarm_system_stats, cleanup_swarm_system!,
+       # Export key enhancement components
+       MultiObjectiveFunction, ConstrainedObjectiveFunction, AdaptiveSwarmOptimizer,
+       SwarmCommunicationManager, SwarmMemoryManager, TaskRecoveryManager, InferenceCoordinator
 
 @enum SwarmStatus begin
     SWARM_CREATED = 1
